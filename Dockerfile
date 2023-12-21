@@ -11,10 +11,11 @@ RUN \
   chown -R www-data:www-data /var/lib/nginx
 
 # Define mountable directories.
-VOLUME ["/etc/nginx/sites-enabled", "/etc/nginx/certs", "/etc/nginx/conf.d", "/var/log/nginx", "/var/www/html"]
-
-COPY web /var/www/html
-RUN chmod -R 755 /var/www/html
+#VOLUME ["/etc/nginx/sites-enabled", "/etc/nginx/certs", "/etc/nginx/conf.d", "/var/log/nginx", "/var/www/html"]
+RUN rm -rf /usr/share/nginx/html
+RUN mkdir web /usr/share/nginx/html
+RUN chmod -R 755 /usr/share/nginx/html
+COPY web /usr/share/nginx/html
 
 # Define working directory.
 WORKDIR /etc/nginx
