@@ -1,28 +1,28 @@
-FROM ubuntu:14.04
+FROM alpine:3.8
 
-# Install Nginx.
-RUN DEBIAN_FRONTEND=noninteractive apt-get -y install software-properties-common
-RUN \
-  add-apt-repository -y ppa:nginx/stable && \
-  apt-get update && \
-  apt-get install -y nginx && \
-  rm -rf /var/lib/apt/lists/* && \
-  echo "\ndaemon off;" >> /etc/nginx/nginx.conf && \
-  chown -R www-data:www-data /var/lib/nginx
+LABEL version="1.0.0" \
+      maintainer="Youssef KAAOUACHI<ykaaouachi@gmail.com>" \ 
+      description="Image based on alpine v3.8, to run 2048 app on nginx"
 
-# Define mountable directories.
-#VOLUME ["/etc/nginx/sites-enabled", "/etc/nginx/certs", "/etc/nginx/conf.d", "/var/log/nginx", "/var/www/html"]
-RUN rm -rf /usr/share/nginx/html
-RUN mkdir web /usr/share/nginx/html
-RUN chmod -R 755 /usr/share/nginx/html
-COPY web /usr/share/nginx/html
+ARG APP_PATH=/usr/share/nginx/html
 
-# Define working directory.
-WORKDIR /etc/nginx
+    ## Install nginx.
+RUN apk --update add nginx && \
+    ## Remove cache to have minimal image.
+    rm -rf /var/cache/apk/* && \
+    ## Create /run/nginx because this directory does not exist 
+    ## on the latest alpine containers.
+    mkdir -p /run/nginx 
 
-# Define default command.
-CMD ["nginx"]
+COPY conf/nginx/nginx-nobody-user.conf /etc/nginx/nginx.conf
+COPY 2048 ${APP_PATH}
 
-# Expose ports.
 EXPOSE 80
-EXPOSE 443
+
+# Health check option
+HEALTHCHECK CMD /usr/bin/nc 127.0.0.1 80 < /dev/null || exit 1
+
+# root user run nginx master process
+# nobody user run nginx worker process (see conf/nginx/nginx-nobody-user.conf)
+# Run this command "ps aux | grep -i nginx | grep -v grep" to check ;) 
+CMD ["nginx", "-g", "daemon off;"]
